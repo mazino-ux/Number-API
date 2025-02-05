@@ -14,7 +14,19 @@ public class NumController {
     @GetMapping("/classify-number")
     public ResponseEntity<Map<String, Object>> classifyNumber(@RequestParam String number) {
         Map<String, Object> response = new HashMap<>();
-        
+
+//        HANDLING ERROR OR BAD REQUESTS
+        if (!number.matches("-?\\d+")) {  
+            response.put("number", number);
+            
+            if (!number.matches(".*\\d.*")) {
+                response.put("error", true);
+            } else { 
+                response.put("error", "Invalid input. Please enter a valid number.");
+            }
+            return ResponseEntity.badRequest().body(response);
+        }
+
         try {
             int num = Integer.parseInt(number);
             response.put("number", num);
@@ -23,7 +35,7 @@ public class NumController {
             response.put("digit_sum", getDigitSum(num));
             response.put("properties", getProperties(num));
             response.put("fun_fact", getFunFact(num));
-            
+
             return ResponseEntity.ok(response);
         } catch (NumberFormatException e) {
             response.put("number", number);
@@ -31,6 +43,7 @@ public class NumController {
             return ResponseEntity.badRequest().body(response);
         }
     }
+
 
     private boolean isPrime(int num) {
         if (num < 2) return false;
@@ -74,12 +87,34 @@ public class NumController {
     }
 
     private String getFunFact(int num) {
+        if (isArmstrong(num)) {
+            return getArmstrongExplanation(num);
+        }
+
+        String url = "http://numbersapi.com/" + num + "/math";
+        RestTemplate restTemplate = new RestTemplate();
         try {
-            String url = "http://numbersapi.com/" + num + "/math";
-            RestTemplate restTemplate = new RestTemplate();
             return restTemplate.getForObject(url, String.class);
         } catch (Exception e) {
-            return "Could not retrieve a fun fact at this time.";
+            return "No fun fact available at the moment.";
         }
     }
+
+    private String getArmstrongExplanation(int num) {
+        int originalNum = num, sum = 0, n = String.valueOf(num).length();
+        StringBuilder explanation = new StringBuilder(num + " is an Armstrong number because ");
+
+        while (originalNum != 0) {
+            int digit = originalNum % 10;
+            sum += Math.pow(digit, n);
+            explanation.append(digit).append("^").append(n).append(" + ");
+            originalNum /= 10;
+        }
+
+        explanation.setLength(explanation.length() - 3); 
+        explanation.append(" = ").append(num);
+        
+        return explanation.toString();
+    }
+
 }
