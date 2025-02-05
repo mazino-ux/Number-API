@@ -1,7 +1,9 @@
 package com.mathena.Numbers.Controller;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
+
 import java.util.*;
 
 @RestController
@@ -10,8 +12,9 @@ import java.util.*;
 public class NumController {
 
     @GetMapping("/classify-number")
-    public Map<String, Object> classifyNumber(@RequestParam String number) {
+    public ResponseEntity<Map<String, Object>> classifyNumber(@RequestParam String number) {
         Map<String, Object> response = new HashMap<>();
+        
         try {
             int num = Integer.parseInt(number);
             response.put("number", num);
@@ -20,11 +23,12 @@ public class NumController {
             response.put("digit_sum", getDigitSum(num));
             response.put("properties", getProperties(num));
             response.put("fun_fact", getFunFact(num));
-            return response;
+            
+            return ResponseEntity.ok(response);
         } catch (NumberFormatException e) {
             response.put("number", number);
-            response.put("error", true);
-            return response;
+            response.put("error", "Invalid input. Please enter a valid number.");
+            return ResponseEntity.badRequest().body(response);
         }
     }
 
@@ -37,20 +41,20 @@ public class NumController {
     }
 
     private boolean isPerfect(int num) {
-        int sum = 0;
-        for (int i = 1; i < num; i++) {
-            if (num % i == 0) sum += i;
+        int sum = 1; 
+        for (int i = 2; i <= Math.sqrt(num); i++) {
+            if (num % i == 0) {
+                sum += i;
+                if (i != num / i) {
+                    sum += num / i;
+                }
+            }
         }
-        return sum == num;
+        return sum == num && num != 1;
     }
 
     private int getDigitSum(int num) {
-        int sum = 0;
-        while (num != 0) {
-            sum += num % 10;
-            num /= 10;
-        }
-        return sum;
+        return String.valueOf(num).chars().map(Character::getNumericValue).sum();
     }
 
     private List<String> getProperties(int num) {
@@ -70,8 +74,12 @@ public class NumController {
     }
 
     private String getFunFact(int num) {
-        String url = "http://numbersapi.com/" + num + "/math";
-        RestTemplate restTemplate = new RestTemplate();
-        return restTemplate.getForObject(url, String.class);
+        try {
+            String url = "http://numbersapi.com/" + num + "/math";
+            RestTemplate restTemplate = new RestTemplate();
+            return restTemplate.getForObject(url, String.class);
+        } catch (Exception e) {
+            return "Could not retrieve a fun fact at this time.";
+        }
     }
 }
