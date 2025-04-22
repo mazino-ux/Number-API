@@ -101,5 +101,5 @@ This API is optimized to respond in under <strong>500ms</strong>, ensuring fast 
   <li>🔗 <strong>Ready-to-use</strong> – Deployed and accessible.</li>
 </ul>
 
-<h2>🔗 Back Link</h2>  
+<h2>🔗 Back Link</h2>
 Java: <a href="https://hng.tech/hire/java-developers">https://hng.tech/hire/java-developers</a>
